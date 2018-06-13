@@ -1,6 +1,5 @@
 // @flow
 
-import { Alert } from 'react-native'
 import { Actions } from 'react-native-router-flux'
 import type { EdgeParsedUri } from 'edge-core-js'
 
@@ -9,8 +8,7 @@ import type { Dispatch, GetState } from '../../../ReduxTypes.js'
 import * as WALLET_API from '../../../Core/Wallets/api.js'
 import { isEdgeLogin, denominationToDecimalPlaces, noOp } from '../../../utils.js'
 import { loginWithEdge } from '../../../../actions/EdgeLoginActions.js'
-import { updateParsedURI } from '../SendConfirmation/action.js'
-import s from '../../../../locales/strings.js'
+import { updateParsedURI, paymentProtocolReceived } from '../SendConfirmation/action.js'
 
 import { activated as legacyAddressModalActivated, deactivated as legacyAddressModalDeactivated } from './LegacyAddressModal/LegacyAddressModalActions.js'
 import { activated as privateKeyModalActivated } from './PrivateKeyModal/PrivateKeyModalActions.js'
@@ -74,10 +72,10 @@ export const parseUri = (data: string) => (dispatch: Dispatch, getState: GetStat
   }
 
   WALLET_API.parseUri(edgeWallet, data).then(
-    parsedUri => {
+    (parsedUri: EdgeParsedUri) => {
       dispatch(parseUriSucceeded(parsedUri))
 
-      if (parsedUri.token) {
+      if (isTokenUri(parsedUri)) {
         // TOKEN URI
         const { contractAddress, currencyName, multiplier } = parsedUri.token
         const currencyCode = parsedUri.token.currencyCode.toUpperCase()
@@ -95,31 +93,39 @@ export const parseUri = (data: string) => (dispatch: Dispatch, getState: GetStat
           wallet: guiWallet,
           onAddToken: noOp
         }
-        Actions.addToken(parameters)
-      } else if (parsedUri.legacyAddress) {
+        return Actions.addToken(parameters)
+      }
+
+      if (isLegacyAddressUri(parsedUri)) {
         // LEGACY ADDRESS URI
-        dispatch(legacyAddressModalActivated())
-        return
+        return dispatch(legacyAddressModalActivated())
       }
-      if (parsedUri.privateKeys && parsedUri.privateKeys.length >= 1) {
+
+      if (isPrivateKeyUri(parsedUri)) {
         // PRIVATE KEY URI
-        dispatch(privateKeyModalActivated())
-      } else {
-        // PUBLIC ADDRESS URI
-        dispatch(updateParsedURI(parsedUri))
-        Actions.sendConfirmation('fromScan')
+        return dispatch(privateKeyModalActivated())
       }
+
+      if (isPaymentProtocolUri(parsedUri)) {
+        // BIP70 URI
+        dispatch(paymentProtocolReceived(parsedUri))
+        return Actions.sendConfirmation('fromScan')
+      }
+
+      // PUBLIC ADDRESS URI
+      dispatch(updateParsedURI(parsedUri))
+      return Actions.sendConfirmation('fromScan')
     },
     () => {
       // INVALID URI
-      dispatch(disableScan())
-      setTimeout(
-        () =>
-          Alert.alert(s.strings.scan_invalid_address_error_title, s.strings.scan_invalid_address_error_description, [
-            { text: s.strings.string_ok, onPress: () => dispatch(enableScan()) }
-          ]),
-        500
-      )
+      // dispatch(disableScan())
+      // setTimeout(
+      //   () =>
+      //     Alert.alert(s.strings.scan_invalid_address_error_title, s.strings.scan_invalid_address_error_description, [
+      //       { text: s.strings.string_ok, onPress: () => dispatch(enableScan()) }
+      //     ]),
+      //   500
+      // )
     }
   )
 }
@@ -156,4 +162,20 @@ export const legacyAddressModalContinueButtonPressed = () => (dispatch: Dispatch
 export const legacyAddressModalCancelButtonPressed = () => (dispatch: Dispatch) => {
   dispatch(legacyAddressModalDeactivated())
   dispatch(enableScan())
+}
+
+export const isTokenUri = (parsedUri: EdgeParsedUri): boolean => {
+  return !!parsedUri.token
+}
+
+export const isLegacyAddressUri = (parsedUri: EdgeParsedUri): boolean => {
+  return !!parsedUri.legacyAddress
+}
+
+export const isPrivateKeyUri = (parsedUri: EdgeParsedUri): boolean => {
+  return !!parsedUri.privateKeys && parsedUri.privateKeys.length >= 1
+}
+
+export const isPaymentProtocolUri = (parsedUri: EdgeParsedUri): boolean => {
+  return !!parsedUri.paymentProtocolUri && !parsedUri.publicAddress
 }

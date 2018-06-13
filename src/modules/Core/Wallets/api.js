@@ -1,6 +1,15 @@
 // @flow
 
-import type { EdgeCurrencyWallet, EdgeMetadata, EdgeParsedUri, EdgeReceiveAddress, EdgeSpendInfo, EdgeTransaction } from 'edge-core-js'
+import type {
+  EdgeCurrencyWallet,
+  EdgeMetadata,
+  EdgeTokenInfo,
+  EdgeParsedUri,
+  EdgeReceiveAddress,
+  EdgeSpendInfo,
+  EdgeSpendTarget,
+  EdgeTransaction
+} from 'edge-core-js'
 import _ from 'lodash'
 const ENABLED_TOKENS_FILENAME = 'EnabledTokens.json'
 
@@ -43,6 +52,48 @@ export const setTransactionDetailsRequest = (wallet: EdgeCurrencyWallet, txid: s
 
 export const getReceiveAddress = (wallet: EdgeCurrencyWallet, currencyCode: string): Promise<EdgeReceiveAddress> => {
   return wallet.getReceiveAddress ? wallet.getReceiveAddress({ currencyCode }) : Promise.resolve(dummyEdgeReceiveAddress)
+}
+
+export const makeSpendInfo = (wallet: EdgeCurrencyWallet, paymentProtocolInfo: EdgePaymentProtocolInfo): EdgeSpendInfo => ({
+  networkFeeOption: 'high',
+  metadata: {
+    name: paymentProtocolInfo.merchant || paymentProtocolInfo.domain
+  },
+  spendTargets: paymentProtocolInfo.spendTarget
+})
+
+export type EdgePaymentProtocolInfo = {
+  domain: string,
+  nativeAmount: string,
+  memo?: string,
+  merchant?: string,
+  spendTarget: Array<EdgeSpendTarget>
+}
+
+const edgePaymentProtocolInfo: EdgePaymentProtocolInfo = {
+  domain: 'https://merchant.com/pay.php?h%3D2a8628fc2fbe',
+  nativeAmount: '11000000',
+  memo: 'Invoice: 1.0 lb Havarti Cheese',
+  merchant: "Sprouts Farmers' Market",
+  spendTarget: [
+    {
+      currencyCode: 'BTC',
+      publicAddress: '1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX',
+      nativeAmount: '11000000'
+    }
+  ]
+}
+
+export const getPaymentProtocolInfo = (wallet: EdgeCurrencyWallet, paymentProtocolUri: string): Promise<EdgePaymentProtocolInfo> => {
+  return Promise.resolve()
+    .then(() => {
+      // $FlowFixMe
+      return wallet.getPaymentProtocolInfo(paymentProtocolUri)
+    })
+    .catch((error: Error) => {
+      console.log(error)
+      return edgePaymentProtocolInfo
+    })
 }
 
 export const makeSpend = (wallet: EdgeCurrencyWallet, spendInfo: EdgeSpendInfo): Promise<EdgeTransaction> => {
@@ -119,7 +170,10 @@ export async function updateEnabledTokens (wallet: EdgeCurrencyWallet, tokensToE
   }
 }
 
-export const parseURI = (wallet: EdgeCurrencyWallet, uri: string): EdgeParsedUri => {
+type EdgeParsedTokenUri = {
+  token: EdgeTokenInfo
+}
+export const parseURI = (wallet: EdgeCurrencyWallet, uri: string): EdgeParsedUri | EdgeParsedTokenUri => {
   return wallet.parseUri(uri)
 }
 

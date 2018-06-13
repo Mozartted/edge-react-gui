@@ -2380,9 +2380,9 @@ edge-core-js@0.9.3:
     utf8 "^3.0.0"
     ws "^5.1.1"
 
-edge-currency-bitcoin@2.20.0:
-  version "2.20.0"
-  resolved "https://registry.yarnpkg.com/edge-currency-bitcoin/-/edge-currency-bitcoin-2.20.0.tgz#13c9772d0f62f5dbef080587b9b23700a699459d"
+"edge-currency-bitcoin@git+https://github.com/Airbitz/edge-currency-bitcoin.git":
+  version "2.20.1"
+  resolved "git+https://github.com/Airbitz/edge-currency-bitcoin.git#93a9f4aad9363072bfe0b398330a7d4f0338aafb"
   dependencies:
     bcoin "git+https://github.com/Airbitz/bcoin.git#primitiveBuild"
     biggystring "^3.0.0"

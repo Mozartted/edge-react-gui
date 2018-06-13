@@ -6,7 +6,15 @@ import { Actions } from 'react-native-router-flux'
 
 import { OPEN_AB_ALERT } from '../../../../constants/indexConstants'
 import { getWallet } from '../../../Core/selectors.js'
-import { broadcastTransaction, getMaxSpendable, makeSpend, saveTransaction, signTransaction } from '../../../Core/Wallets/api.js'
+import {
+  broadcastTransaction,
+  getMaxSpendable,
+  makeSpend,
+  saveTransaction,
+  signTransaction,
+  getPaymentProtocolInfo,
+  makeSpendInfo
+} from '../../../Core/Wallets/api.js'
 import type { Dispatch, GetState } from '../../../ReduxTypes'
 import { openABAlert } from '../../components/ABAlert/action'
 import { getSelectedWalletId } from '../../selectors.js'
@@ -56,6 +64,20 @@ export const uniqueIdentifierUpdated = (uniqueIdentifier: string) => (dispatch: 
     .catch(e => {
       console.log(e)
       dispatch(updateTransaction(null, newParsedUri))
+    })
+}
+
+export const paymentProtocolReceived = (parsedUri: EdgeParsedUri) => (dispatch: Dispatch, getState: GetState) => {
+  const state = getState()
+  const walletId = getSelectedWalletId(state)
+  const edgeWallet = getWallet(state, walletId)
+
+  Promise.resolve(parsedUri.paymentProtocolUri)
+    .then(paymentProtocolUri => getPaymentProtocolInfo(edgeWallet, paymentProtocolUri))
+    .then(paymentProtocolInfo => makeSpendInfo(edgeWallet, paymentProtocolInfo))
+    .then(spendInfo => makeSpend(edgeWallet, spendInfo))
+    .then(edgeTransaction => {
+      dispatch(updateTransaction(edgeTransaction))
     })
 }
 
