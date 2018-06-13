@@ -27,6 +27,7 @@ export const UPDATE_LABEL = PREFIX + 'UPDATE_LABEL'
 export const UPDATE_IS_KEYBOARD_VISIBLE = PREFIX + 'UPDATE_IS_KEYBOARD_VISIBLE'
 export const UPDATE_SPEND_PENDING = PREFIX + 'UPDATE_SPEND_PENDING'
 export const RESET = PREFIX + 'RESET'
+export const UPDATE_PAYMENT_PROTOCOL_TRANSACTION = PREFIX + 'UPDATE_PAYMENT_PROTOCOL_TRANSACTION'
 export const UPDATE_TRANSACTION = PREFIX + 'UPDATE_TRANSACTION'
 
 export const updateAmount = (nativeAmount: string, exchangeAmount: string, fiatPerCrypto: string) => (dispatch: Dispatch, getState: GetState) => {
@@ -77,7 +78,8 @@ export const paymentProtocolReceived = (parsedUri: EdgeParsedUri) => (dispatch: 
     .then(paymentProtocolInfo => makeSpendInfo(edgeWallet, paymentProtocolInfo))
     .then(spendInfo => makeSpend(edgeWallet, spendInfo))
     .then(edgeTransaction => {
-      dispatch(updateTransaction(edgeTransaction))
+      dispatch()
+      dispatch(updatePaymentProtocolTransaction(edgeTransaction))
     })
 }
 
@@ -148,6 +150,11 @@ export const updateLabel = (label: string) => ({
 export const reset = () => ({
   type: RESET,
   data: {}
+})
+
+export const updatePaymentProtocolTransaction = (transaction: EdgeTransaction) => ({
+  type: UPDATE_PAYMENT_PROTOCOL_TRANSACTION,
+  data: { transaction }
 })
 
 export const updateTransaction = (transaction: ?EdgeTransaction, parsedUri: ?EdgeParsedUri, forceUpdateGui: ?boolean, error: ?Error) => ({

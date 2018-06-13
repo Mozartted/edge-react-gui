@@ -17,17 +17,16 @@ export type GuiMakeSpendInfo = {
 }
 
 export type SendConfirmationState = {
-  label: string,
   pending: boolean,
   isKeyboardVisible: boolean,
   forceUpdateGuiCounter: number,
   transaction: EdgeTransaction | null,
   parsedUri: GuiMakeSpendInfo | EdgeParsedUri,
-  error: Error | null
+  error: Error | null,
+  isEditable: boolean
 }
 
 export const initialState = {
-  label: '',
   pending: false,
   isKeyboardVisible: false,
   forceUpdateGuiCounter: 0,
@@ -58,14 +57,14 @@ export const initialState = {
       miscJson: ''
     }
   },
-  error: null
+  error: null,
+  isEditable: false
 }
 
 export const getScene = (state: State): any => getSceneState(state, 'sendConfirmation')
 export const getPending = (state: State): boolean => getScene(state).pending
 export const getError = (state: State): Error => getScene(state).error
 export const getKeyboardIsVisible = (state: State): boolean => getScene(state).keyboardIsVisible
-export const getLabel = (state: State): string => getScene(state).label
 
 export const getTransaction = (state: State): EdgeTransaction => getScene(state).transaction || initialState.transaction
 export const getParsedUri = (state: State): GuiMakeSpendInfo => getScene(state).parsedUri || initialState.parsedUri

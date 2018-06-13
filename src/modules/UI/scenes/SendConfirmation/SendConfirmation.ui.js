@@ -34,7 +34,6 @@ export type SendConfirmationStateProps = {
   publicAddress: string,
   pending: boolean,
   keyboardIsVisible: boolean,
-  label: string,
   balanceInCrypto: string,
   balanceInFiat: string,
   parentDisplayDenomination: EdgeDenomination,
@@ -48,7 +47,9 @@ export type SendConfirmationStateProps = {
   resetSlider: boolean,
   forceUpdateGuiCounter: number,
   currencyConverter: CurrencyConverter,
-  uniqueIdentifier?: string
+  uniqueIdentifier?: string,
+  destination: string,
+  isEditable: boolean
 }
 
 export type SendConfirmationDispatchProps = {
@@ -184,16 +185,21 @@ export class SendConfirmation extends Component<Props, State> {
     const cryptoBalanceAmountString = cryptoBalanceAmount ? intl.formatNumber(decimalOrZero(bns.toFixed(cryptoBalanceAmount, 0, 6), 6)) : '0' // limit decimals and check if infitesimal, also cut off trailing zeroes (to right of significant figures)
     const balanceInFiatString = intl.formatNumber(this.props.balanceInFiat || 0, { toFixed: 2 })
 
+    const destination = this.props.destination
+    const SEND_TO_DESTINATION_TEXT = sprintf(s.strings.send_to_title, destination)
+
     return (
       <SafeAreaView>
         <Gradient style={[styles.view]}>
-          <Gradient style={styles.gradient} />
+          <Gradient style={[styles.gradient]} />
+
           <View style={[styles.mainScrollView]}>
             <View style={[styles.balanceContainer, styles.error]}>
-              <Text style={styles.balanceText}>
+              <Text style={[styles.balanceText]}>
                 Balance: {cryptoBalanceAmountString} {primaryInfo.displayDenomination.name} ({secondaryInfo.displayDenomination.symbol} {balanceInFiatString})
               </Text>
             </View>
+
             <View style={[styles.exchangeRateContainer, styles.error]}>
               {this.props.errorMsg ? (
                 <Text style={[styles.error, styles.errorText]}>{this.props.errorMsg}</Text>
@@ -201,7 +207,8 @@ export class SendConfirmation extends Component<Props, State> {
                 <ExchangeRate secondaryDisplayAmount={this.props.fiatPerCrypto} primaryInfo={primaryInfo} secondaryInfo={secondaryInfo} />
               )}
             </View>
-            <View style={styles.main}>
+
+            <View style={[styles.main]}>
               <ExchangedFlipInput
                 primaryCurrencyInfo={{ ...primaryInfo }}
                 secondaryCurrencyInfo={{ ...secondaryInfo }}
@@ -210,11 +217,22 @@ export class SendConfirmation extends Component<Props, State> {
                 forceUpdateGuiCounter={this.state.forceUpdateGuiCounter}
                 onExchangeAmountChanged={this.onExchangeAmountChanged}
                 keyboardVisible={this.state.keyboardVisible}
+                isEditable={this.props.isEditable}
               />
+
               <View style={[styles.feeArea]}>
                 <Text style={[styles.feeAreaText]}>{networkFeeSyntax()}</Text>
               </View>
-              <Recipient label={this.props.label} link={''} publicAddress={this.props.publicAddress} style={styles.recipient} />
+
+              <Recipient>
+                <Recipient.Row>
+                  <Recipient.Item>
+                    <Recipient.Text>
+                      <Text>{SEND_TO_DESTINATION_TEXT}</Text>
+                    </Recipient.Text>
+                  </Recipient.Item>
+                </Recipient.Row>
+              </Recipient>
 
               {this.props.uniqueIdentifier && (
                 <UniqueIdentifier>
@@ -224,9 +242,11 @@ export class SendConfirmation extends Component<Props, State> {
                 </UniqueIdentifier>
               )}
             </View>
+
             <View style={[styles.pendingSymbolArea]}>
               {this.props.pending && <ActivityIndicator style={[{ flex: 1, alignSelf: 'center' }]} size={'small'} />}
             </View>
+
             <View style={[styles.sliderWrap]}>
               <ABSlider
                 forceUpdateGuiCounter={this.state.forceUpdateGuiCounter}

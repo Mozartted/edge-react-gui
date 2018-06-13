@@ -13,7 +13,6 @@ import {
   getError,
   getForceUpdateGuiCounter,
   getKeyboardIsVisible,
-  getLabel,
   getNativeAmount,
   getNetworkFee,
   getParentNetworkFee,
@@ -25,6 +24,7 @@ import { SendConfirmation } from './SendConfirmation.ui'
 import type { SendConfirmationDispatchProps, SendConfirmationStateProps } from './SendConfirmation.ui'
 
 const mapStateToProps = (state: State): SendConfirmationStateProps => {
+  const sceneState = state.ui.scenes.sendConfirmation
   let fiatPerCrypto = 0
   let secondaryeExchangeCurrencyCode = ''
   const currencyConverter = getCurrencyConverter(state)
@@ -59,8 +59,8 @@ const mapStateToProps = (state: State): SendConfirmationStateProps => {
     errorMsg = error.message
   }
 
-  const uniqueIdentifier = state.ui.scenes.sendConfirmation.parsedUri.uniqueIdentifier
-
+  const uniqueIdentifier = sceneState.parsedUri.uniqueIdentifier
+  const destination = sceneState.parsedUri.publicAddress /* sceneState.parsedUri.merchant || sceneState.parsedUri.domain || */
   const out = {
     nativeAmount,
     errorMsg,
@@ -77,14 +77,15 @@ const mapStateToProps = (state: State): SendConfirmationStateProps => {
     forceUpdateGuiCounter: getForceUpdateGuiCounter(state),
     publicAddress: getPublicAddress(state),
     keyboardIsVisible: getKeyboardIsVisible(state),
-    label: getLabel(state),
+    destination,
     parentNetworkFee: getParentNetworkFee(state),
     networkFee: getNetworkFee(state),
     sliderDisabled: !transaction || !!error || !!pending,
     currencyConverter,
     balanceInCrypto,
     balanceInFiat,
-    uniqueIdentifier
+    uniqueIdentifier,
+    isEditable: sceneState.isEditable
   }
   return out
 }

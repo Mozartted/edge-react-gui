@@ -19,6 +19,7 @@ export default StyleSheet.create({
     alignItems: 'center'
   },
   main: {
+    width: '100%',
     alignItems: 'center'
   },
   exchangeRateContainer: {

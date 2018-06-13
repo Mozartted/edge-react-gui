@@ -96,7 +96,8 @@ export type State = {
         customNetworkFee: any,
         isKeyboardVisible: boolean,
         forceUpdateGuiCounter: number,
-        pending: boolean
+        pending: boolean,
+        isEditable: boolean
       },
       changeMiningFee: {
         isCustomFeeVisible: boolean

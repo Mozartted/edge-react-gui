@@ -36,6 +36,16 @@ export const sendConfirmation = (state: SendConfirmationState = initialState, ac
         }
       }
     }
+    case ACTION.UPDATE_PAYMENT_PROTOCOL_TRANSACTION: {
+      const { transaction, parsedUri } = data
+
+      return {
+        ...state,
+        transaction,
+        parsedUri,
+        isEditable: false
+      }
+    }
     case ACTION.UPDATE_IS_KEYBOARD_VISIBLE: {
       const { isKeyboardVisible } = data
       return {
